@@ -1,14 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from 'styled-components';
 import { theme } from '@/styles/theme';
 import { FormBuilder } from './FormBuilder';
 
-/** Renders the app and returns queries scoped to this render's container,
- *  so tests stay isolated regardless of global cleanup behaviour. */
 function renderApp() {
-  // Isolate session persistence between tests.
   window.localStorage.clear();
   const { container } = render(
     <ThemeProvider theme={theme}>
@@ -18,45 +15,92 @@ function renderApp() {
   return within(container);
 }
 
+/** Add a field end-to-end: pick a type, then save the settings modal. */
+async function addField(
+  user: ReturnType<typeof userEvent.setup>,
+  screen: ReturnType<typeof renderApp>,
+  tile: RegExp = /short text/i,
+  label?: string,
+) {
+  await user.click(screen.getAllByRole('button', { name: /add field/i })[0]);
+  await user.click(await screen.findByRole('button', { name: tile }));
+  const dialog = await screen.findByRole('dialog', { name: /configure/i });
+  if (label) {
+    const input = within(dialog).getByLabelText('Label');
+    await user.clear(input);
+    await user.type(input, label);
+  }
+  await user.click(within(dialog).getByRole('button', { name: 'Add field' }));
+}
+
 describe('FormBuilder', () => {
-  it('shows empty states on first load', () => {
+  it('shows the empty builder and an empty preview', () => {
     const screen = renderApp();
     expect(screen.getByText('Start building')).toBeInTheDocument();
-    expect(screen.getByText(/your data will appear here/i)).toBeInTheDocument();
+    expect(screen.getByText(/add a field to see your form take shape/i)).toBeInTheDocument();
   });
 
-  it('adds a field and reflects typed data live in the preview', async () => {
+  it('opens the picker then the settings modal for the chosen type', async () => {
     const user = userEvent.setup();
     const screen = renderApp();
 
     await user.click(screen.getAllByRole('button', { name: /add field/i })[0]);
-    await user.type(screen.getByPlaceholderText('e.g. Full name'), 'Name');
-    await user.type(screen.getByPlaceholderText('Enter a value'), 'Aarav');
+    expect(screen.getByRole('dialog', { name: /add a field/i })).toBeInTheDocument();
 
+    await user.click(screen.getByRole('button', { name: /phone number/i }));
+    expect(screen.getByRole('dialog', { name: /configure phone number/i })).toBeInTheDocument();
+  });
+
+  it('adds a configured field and reflects it in the live preview', async () => {
+    const user = userEvent.setup();
+    const screen = renderApp();
+
+    await addField(user, screen, /short text/i, 'First name');
+
+    expect(
+      screen.getByRole('button', { name: /remove field: first name/i }),
+    ).toBeInTheDocument();
     const preview = screen.getByRole('region', { name: /live preview/i });
-    expect(within(preview).getByText('Name')).toBeInTheDocument();
-    expect(within(preview).getByText('Aarav')).toBeInTheDocument();
+    expect(within(preview).getByText('First name')).toBeInTheDocument();
   });
 
-  it('removes a field and returns to the empty state', async () => {
+  it('confirms before removing a field, then returns to the empty state', async () => {
     const user = userEvent.setup();
     const screen = renderApp();
 
-    await user.click(screen.getAllByRole('button', { name: /add field/i })[0]);
-    expect(screen.getByPlaceholderText('e.g. Full name')).toBeInTheDocument();
-
+    await addField(user, screen);
+    // Clicking remove opens a confirmation (BUG-006) — the field stays for now.
     await user.click(screen.getByRole('button', { name: /remove field/i }));
+    const dialog = await screen.findByRole('dialog', { name: /remove this field/i });
+    expect(screen.queryByText('Start building')).not.toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: /remove field/i }));
     expect(screen.getByText('Start building')).toBeInTheDocument();
   });
 
-  it('flags an empty label on submit without blocking', async () => {
+  it('keeps the field when the remove confirmation is cancelled', async () => {
     const user = userEvent.setup();
     const screen = renderApp();
 
-    await user.click(screen.getAllByRole('button', { name: /add field/i })[0]);
-    await user.type(screen.getByPlaceholderText('Enter a value'), 'orphan');
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await addField(user, screen, /short text/i, 'Keep me');
+    await user.click(screen.getByRole('button', { name: /remove field: keep me/i }));
+    const dialog = await screen.findByRole('dialog', { name: /remove this field/i });
+    await user.click(within(dialog).getByRole('button', { name: /cancel/i }));
 
-    expect(screen.getByRole('alert')).toHaveTextContent(/label is required/i);
+    expect(screen.getByRole('button', { name: /remove field: keep me/i })).toBeInTheDocument();
+  });
+
+  it('publishes to a /form URL and opens it in a new tab', async () => {
+    const user = userEvent.setup();
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+    const screen = renderApp();
+
+    await addField(user, screen);
+    await user.click(screen.getAllByRole('button', { name: /publish form/i })[0]);
+
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy.mock.calls[0][0]).toMatch(/\/form#/);
+    expect(screen.getByText(/form published/i)).toBeInTheDocument();
+    openSpy.mockRestore();
   });
 });

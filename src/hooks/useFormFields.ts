@@ -1,19 +1,12 @@
 'use client';
 
 import { useCallback, useReducer } from 'react';
-import type { FieldAction, FieldType, FormField, FormState } from '@/types/field';
-import { validateField } from '@/lib/validators';
-import { createId } from '@/utils/id';
+import type { FieldAction, FieldType, FormField, FormSchema, FormState } from '@/types/field';
 
 export const initialState: FormState = {
+  title: 'Untitled form',
   fields: [],
-  lastSubmittedAt: null,
 };
-
-/** Factory for a fresh, empty field. */
-function makeField(): FormField {
-  return { id: createId(), label: '', value: '', type: 'text', updatedAt: Date.now() };
-}
 
 /**
  * Pure state transition function (TRD §8.1). Exported for unit testing.
@@ -24,9 +17,6 @@ export function formReducer(state: FormState, action: FieldAction): FormState {
     case 'ADD_FIELD':
       return { ...state, fields: [...state.fields, action.field] };
 
-    case 'REMOVE_FIELD':
-      return { ...state, fields: state.fields.filter((f) => f.id !== action.id) };
-
     case 'UPDATE_FIELD':
       return {
         ...state,
@@ -35,18 +25,26 @@ export function formReducer(state: FormState, action: FieldAction): FormState {
         ),
       };
 
-    case 'SUBMIT':
-      return {
-        ...state,
-        fields: state.fields.map((f) => ({ ...f, error: validateField(f) })),
-        lastSubmittedAt: Date.now(),
-      };
+    case 'REMOVE_FIELD':
+      return { ...state, fields: state.fields.filter((f) => f.id !== action.id) };
+
+    case 'MOVE_FIELD': {
+      const index = state.fields.findIndex((f) => f.id === action.id);
+      const target = action.direction === 'up' ? index - 1 : index + 1;
+      if (index === -1 || target < 0 || target >= state.fields.length) return state;
+      const fields = [...state.fields];
+      [fields[index], fields[target]] = [fields[target], fields[index]];
+      return { ...state, fields };
+    }
+
+    case 'SET_TITLE':
+      return { ...state, title: action.title };
 
     case 'RESET':
       return { ...initialState };
 
     case 'HYDRATE':
-      return { ...state, fields: action.fields };
+      return { title: action.schema.title, fields: action.schema.fields };
 
     default:
       return state;
@@ -54,57 +52,63 @@ export function formReducer(state: FormState, action: FieldAction): FormState {
 }
 
 export interface UseFormFields {
+  title: string;
   fields: FormField[];
-  lastSubmittedAt: number | null;
-  /** Adds an empty field and returns its id (for autofocus). */
-  addField: () => string;
-  removeField: (id: string) => void;
+  /** Appends an already-configured field. */
+  addField: (field: FormField) => void;
+  /** Patches a field's settings. */
   updateField: (id: string, patch: Partial<FormField>) => void;
-  submit: () => void;
+  removeField: (id: string) => void;
+  /** Swaps a field with its neighbour in the given direction. */
+  moveField: (id: string, direction: 'up' | 'down') => void;
+  setTitle: (title: string) => void;
   reset: () => void;
-  hydrate: (fields: FormField[]) => void;
+  hydrate: (schema: FormSchema) => void;
 }
 
 /**
  * Clean API over the reducer (TRD §8.2). Handlers are stable via useCallback
- * so memoised rows don't re-render on unrelated updates (TRD §11).
+ * so memoised cards don't re-render on unrelated updates (TRD §11).
  */
 export function useFormFields(): UseFormFields {
   const [state, dispatch] = useReducer(formReducer, initialState);
 
-  const addField = useCallback((): string => {
-    const field = makeField();
+  const addField = useCallback((field: FormField) => {
     dispatch({ type: 'ADD_FIELD', field });
-    return field.id;
-  }, []);
-
-  const removeField = useCallback((id: string) => {
-    dispatch({ type: 'REMOVE_FIELD', id });
   }, []);
 
   const updateField = useCallback((id: string, patch: Partial<FormField>) => {
     dispatch({ type: 'UPDATE_FIELD', id, patch });
   }, []);
 
-  const submit = useCallback(() => {
-    dispatch({ type: 'SUBMIT' });
+  const removeField = useCallback((id: string) => {
+    dispatch({ type: 'REMOVE_FIELD', id });
+  }, []);
+
+  const moveField = useCallback((id: string, direction: 'up' | 'down') => {
+    dispatch({ type: 'MOVE_FIELD', id, direction });
+  }, []);
+
+  const setTitle = useCallback((title: string) => {
+    dispatch({ type: 'SET_TITLE', title });
   }, []);
 
   const reset = useCallback(() => {
     dispatch({ type: 'RESET' });
   }, []);
 
-  const hydrate = useCallback((fields: FormField[]) => {
-    dispatch({ type: 'HYDRATE', fields });
+  const hydrate = useCallback((schema: FormSchema) => {
+    dispatch({ type: 'HYDRATE', schema });
   }, []);
 
   return {
+    title: state.title,
     fields: state.fields,
-    lastSubmittedAt: state.lastSubmittedAt,
     addField,
-    removeField,
     updateField,
-    submit,
+    removeField,
+    moveField,
+    setTitle,
     reset,
     hydrate,
   };

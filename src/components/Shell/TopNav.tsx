@@ -1,16 +1,22 @@
 'use client';
 
-import { BarChart3, Bell, HelpCircle, Send } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { Plus, Send } from 'lucide-react';
 import styled from 'styled-components';
 import { media } from '@/styles/breakpoints';
-import { Button, IconButton } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 export interface TopNavProps {
-  onPublish: () => void;
-  canPublish: boolean;
+  onPublish?: () => void;
+  canPublish?: boolean;
 }
 
-const NAV_ITEMS = ['Dashboard', 'Templates', 'Library', 'Settings'];
+const NAV_ITEMS: { label: string; href: string }[] = [
+  { label: 'Builder', href: '/' },
+  { label: 'My forms', href: '/forms' },
+];
 
 const Bar = styled.header`
   position: fixed;
@@ -37,49 +43,31 @@ const Left = styled.div`
   min-width: 0;
 `;
 
-const Brand = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-`;
-
-const Logomark = styled.span`
+// The full brand logo (symbol + wordmark + tagline) used as-is — no
+// separately typed name. Whitespace-trimmed copy lives at /logo-full.png.
+const Brand = styled(Link)`
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
   flex: none;
-  color: ${({ theme }) => theme.colors.onPrimary};
-  background: ${({ theme }) => theme.colors.primary};
-  border-radius: ${({ theme }) => theme.radii.md};
-`;
+  text-decoration: none;
+  border-radius: ${({ theme }) => theme.radii.sm};
 
-const Wordmark = styled.div`
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-`;
+  & img {
+    display: block;
+    /* fluid within the bar: a touch smaller on phones */
+    height: 40px;
+    width: auto;
+  }
 
-const Name = styled.span`
-  font-family: ${({ theme }) => theme.fonts.heading};
-  font-size: ${({ theme }) => theme.fontSizes.body};
-  font-weight: ${({ theme }) => theme.fontWeights.bold};
-  letter-spacing: ${({ theme }) => theme.letterSpacings.tight};
-  color: ${({ theme }) => theme.colors.text};
-  white-space: nowrap;
-`;
+  ${media.upDesktop} {
+    & img {
+      height: 50px;
+    }
+  }
 
-const Tagline = styled.span`
-  font-family: ${({ theme }) => theme.fonts.mono};
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: ${({ theme }) => theme.colors.textSubtle};
-  white-space: nowrap;
-
-  ${media.mobile} {
-    display: none;
+  &:focus-visible {
+    outline: none;
+    box-shadow: ${({ theme }) => theme.shadows.focus};
   }
 `;
 
@@ -94,13 +82,11 @@ const Nav = styled.nav`
   }
 `;
 
-const NavLink = styled.button<{ $active?: boolean }>`
+const NavLink = styled(Link)<{ $active?: boolean }>`
   height: 100%;
   display: inline-flex;
   align-items: center;
-  border: none;
-  background: none;
-  cursor: pointer;
+  text-decoration: none;
   font-family: ${({ theme }) => theme.fonts.body};
   font-size: ${({ theme }) => theme.fontSizes.bodySm};
   font-weight: ${({ theme }) => theme.fontWeights.semibold};
@@ -126,16 +112,6 @@ const Right = styled.div`
   gap: ${({ theme }) => theme.spacing.sm};
 `;
 
-const QuietActions = styled.div`
-  display: none;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.xs};
-
-  ${media.upTablet} {
-    display: flex;
-  }
-`;
-
 const PublishLabel = styled.span`
   ${media.mobile} {
     /* Icon-only on small screens to keep the bar from crowding. */
@@ -143,63 +119,53 @@ const PublishLabel = styled.span`
   }
 `;
 
-const Avatar = styled.div`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  font-family: ${({ theme }) => theme.fonts.mono};
-  font-size: 11px;
-  font-weight: ${({ theme }) => theme.fontWeights.medium};
-  color: ${({ theme }) => theme.colors.primary};
-  background: ${({ theme }) => theme.colors.primarySoft};
-  border-radius: ${({ theme }) => theme.radii.full};
-`;
+/** Top navigation: real Builder / My forms links plus a context action. */
+export function TopNav({ onPublish, canPublish = false }: TopNavProps) {
+  const pathname = usePathname() ?? '/';
+  const router = useRouter();
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
 
-/** Presentational top navigation. Nav links are chrome (out of scope per PRD). */
-export function TopNav({ onPublish, canPublish }: TopNavProps) {
   return (
     <Bar>
       <Left>
-        <Brand>
-          <Logomark aria-hidden>
-            <BarChart3 size={18} />
-          </Logomark>
-          <Wordmark>
-            <Name>Supremus Angel</Name>
-            <Tagline>Unlock the Power of Pre-IPO</Tagline>
-          </Wordmark>
+        <Brand href="/" aria-label="Supremus Angel — home">
+          <Image src="/logo-full.png" alt="Supremus Angel" width={66} height={50} priority />
         </Brand>
         <Nav aria-label="Primary">
-          {NAV_ITEMS.map((item) => (
-            <NavLink key={item} $active={item === 'Dashboard'} type="button">
-              {item}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.map(({ label, href }) => {
+            const active = isActive(href);
+            return (
+              <NavLink
+                key={href}
+                href={href}
+                $active={active}
+                aria-current={active ? 'page' : undefined}
+              >
+                {label}
+              </NavLink>
+            );
+          })}
         </Nav>
       </Left>
 
       <Right>
-        <QuietActions>
-          <IconButton aria-label="Notifications">
-            <Bell size={20} aria-hidden />
-          </IconButton>
-          <IconButton aria-label="Help">
-            <HelpCircle size={20} aria-hidden />
-          </IconButton>
-        </QuietActions>
-        <Button
-          onClick={onPublish}
-          disabled={!canPublish}
-          aria-label="Publish form"
-          title="Commit the current data"
-        >
-          <Send size={16} aria-hidden />
-          <PublishLabel>Publish form</PublishLabel>
-        </Button>
-        <Avatar aria-hidden>SA</Avatar>
+        {onPublish ? (
+          <Button
+            onClick={onPublish}
+            disabled={!canPublish}
+            aria-label="Publish form"
+            title="Publish the form and open it in a new tab"
+          >
+            <Send size={16} aria-hidden />
+            <PublishLabel>Publish form</PublishLabel>
+          </Button>
+        ) : (
+          <Button onClick={() => router.push('/')} aria-label="Create a new form">
+            <Plus size={16} aria-hidden />
+            <PublishLabel>New form</PublishLabel>
+          </Button>
+        )}
       </Right>
     </Bar>
   );

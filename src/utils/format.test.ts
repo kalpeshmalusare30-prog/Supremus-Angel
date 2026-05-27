@@ -1,38 +1,44 @@
 import { describe, expect, it } from 'vitest';
-import type { FormField } from '@/types/field';
-import { formatDisplayValue, hasContent, isNumeric, metaSummary, timeAgo } from './format';
+import { formatDisplayValue, isNumericValue, linkHref, numericValue, timeAgo } from './format';
 
-const field = (over: Partial<FormField> = {}): FormField => ({
-  id: 'x',
-  label: 'Score',
-  value: '',
-  type: 'text',
-  updatedAt: 0,
-  ...over,
-});
-
-describe('isNumeric', () => {
+describe('isNumericValue', () => {
   it('is true only for numeric-typed parseable values', () => {
-    expect(isNumeric(field({ type: 'number', value: '42' }))).toBe(true);
-    expect(isNumeric(field({ type: 'number', value: 'abc' }))).toBe(false);
-    expect(isNumeric(field({ type: 'text', value: '42' }))).toBe(false);
-    expect(isNumeric(field({ type: 'number', value: '' }))).toBe(false);
+    expect(isNumericValue('number', '42')).toBe(true);
+    expect(isNumericValue('currency', '$1,200')).toBe(true);
+    expect(isNumericValue('number', 'abc')).toBe(false);
+    expect(isNumericValue('text', '42')).toBe(false);
+    expect(isNumericValue('number', '')).toBe(false);
   });
 });
 
-describe('hasContent', () => {
-  it('is true when a label or value is present', () => {
-    expect(hasContent(field({ label: '', value: '' }))).toBe(false);
-    expect(hasContent(field({ label: 'L', value: '' }))).toBe(true);
-    expect(hasContent(field({ label: '', value: 'V' }))).toBe(true);
+describe('numericValue', () => {
+  it('strips currency symbols before parsing', () => {
+    expect(numericValue('currency', '$1,200.50')).toBe(1200.5);
+    expect(numericValue('number', '42')).toBe(42);
   });
 });
 
 describe('formatDisplayValue', () => {
   it('groups numbers and dashes empties', () => {
-    expect(formatDisplayValue(field({ type: 'number', value: '1000000' }))).toBe('1,000,000');
-    expect(formatDisplayValue(field({ value: '' }))).toBe('—');
-    expect(formatDisplayValue(field({ value: 'hello' }))).toBe('hello');
+    expect(formatDisplayValue('number', '1000000')).toBe('1,000,000');
+    expect(formatDisplayValue('text', '')).toBe('—');
+    expect(formatDisplayValue('text', 'hello')).toBe('hello');
+  });
+
+  it('renders booleans, currency, and ratings', () => {
+    expect(formatDisplayValue('boolean', 'true')).toBe('Yes');
+    expect(formatDisplayValue('boolean', 'false')).toBe('No');
+    expect(formatDisplayValue('currency', '1200.5')).toBe('$1,200.50');
+    expect(formatDisplayValue('rating', '4')).toBe('★★★★☆');
+  });
+});
+
+describe('linkHref', () => {
+  it('builds hrefs for link-style types', () => {
+    expect(linkHref('email', 'a@b.com')).toBe('mailto:a@b.com');
+    expect(linkHref('url', 'example.com')).toBe('https://example.com');
+    expect(linkHref('phone', '+1 (555) 000')).toBe('tel:+1555000');
+    expect(linkHref('text', 'nope')).toBeNull();
   });
 });
 
@@ -43,14 +49,5 @@ describe('timeAgo', () => {
     expect(timeAgo(now - 30_000, now)).toBe('30s ago');
     expect(timeAgo(now - 5 * 60_000, now)).toBe('5m ago');
     expect(timeAgo(now - 3 * 3_600_000, now)).toBe('3h ago');
-  });
-});
-
-describe('metaSummary', () => {
-  it('summarises type, detail, and recency', () => {
-    const summary = metaSummary(field({ type: 'number', value: '42', updatedAt: 0 }), 0);
-    expect(summary).toContain('Type: number');
-    expect(summary).toContain('value 42');
-    expect(summary).toContain('Last edited');
   });
 });

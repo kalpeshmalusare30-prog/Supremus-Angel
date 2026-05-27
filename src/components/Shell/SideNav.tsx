@@ -1,6 +1,8 @@
 'use client';
 
-import { BarChart3, BookOpen, Palette, Workflow, Wrench } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ClipboardList, Wrench } from 'lucide-react';
 import styled from 'styled-components';
 import { media } from '@/styles/breakpoints';
 
@@ -24,14 +26,12 @@ const Rail = styled.aside`
   }
 `;
 
-const RailButton = styled.button<{ $active?: boolean }>`
+const RailLink = styled(Link)<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: none;
-  cursor: pointer;
   color: ${({ theme, $active }) => ($active ? theme.colors.onPrimary : theme.colors.textMuted)};
   background: ${({ theme, $active }) => ($active ? theme.colors.primary : 'transparent')};
   border-radius: ${({ theme }) => theme.radii.md};
@@ -53,25 +53,34 @@ const RailButton = styled.button<{ $active?: boolean }>`
   }
 `;
 
-const TOOLS = [
-  { key: 'build', label: 'Builder', Icon: Wrench, active: true },
-  { key: 'flow', label: 'Logic', Icon: Workflow, active: false },
-  { key: 'theme', label: 'Theme', Icon: Palette, active: false },
-  { key: 'insights', label: 'Insights', Icon: BarChart3, active: false },
+const NAV = [
+  { key: 'builder', label: 'Builder', href: '/', Icon: Wrench },
+  { key: 'forms', label: 'My forms', href: '/forms', Icon: ClipboardList },
 ];
 
-/** Presentational left icon rail (desktop only). */
+/** Left icon rail (desktop) — the two real destinations. */
 export function SideNav() {
+  const pathname = usePathname() ?? '/';
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
+
   return (
-    <Rail aria-label="Tools">
-      {TOOLS.map(({ key, label, Icon, active }) => (
-        <RailButton key={key} type="button" $active={active} aria-label={label} title={label}>
-          <Icon size={20} aria-hidden />
-        </RailButton>
-      ))}
-      <RailButton type="button" aria-label="Docs" title="Docs" style={{ marginTop: 'auto' }}>
-        <BookOpen size={20} aria-hidden />
-      </RailButton>
+    <Rail aria-label="Sections">
+      {NAV.map(({ key, label, href, Icon }) => {
+        const active = isActive(href);
+        return (
+          <RailLink
+            key={key}
+            href={href}
+            $active={active}
+            aria-label={label}
+            title={label}
+            aria-current={active ? 'page' : undefined}
+          >
+            <Icon size={20} aria-hidden />
+          </RailLink>
+        );
+      })}
     </Rail>
   );
 }

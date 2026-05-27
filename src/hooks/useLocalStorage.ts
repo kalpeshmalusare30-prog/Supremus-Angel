@@ -1,35 +1,39 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { FieldType, FormField } from '@/types/field';
+import type { FormSchema } from '@/types/field';
+import { DRAFT_KEY } from '@/lib/store';
 
-const STORAGE_KEY = 'supremus-angel:fields';
-const FIELD_TYPES: FieldType[] = ['text', 'number', 'email'];
+const STORAGE_KEY = DRAFT_KEY;
 
-/** Narrows untrusted parsed JSON to a FormField[] before hydrating. */
-function isFormFieldArray(value: unknown): value is FormField[] {
+/** Narrows untrusted parsed JSON to a FormSchema before hydrating. */
+function isFormSchema(value: unknown): value is FormSchema {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as FormSchema;
   return (
-    Array.isArray(value) &&
-    value.every(
-      (f): f is FormField =>
+    typeof v.title === 'string' &&
+    Array.isArray(v.fields) &&
+    v.fields.every(
+      (f) =>
         !!f &&
         typeof f === 'object' &&
-        typeof (f as FormField).id === 'string' &&
-        typeof (f as FormField).label === 'string' &&
-        typeof (f as FormField).value === 'string' &&
-        FIELD_TYPES.includes((f as FormField).type),
+        typeof f.id === 'string' &&
+        typeof f.type === 'string' &&
+        typeof f.name === 'string' &&
+        typeof f.label === 'string',
     )
   );
 }
 
 /**
- * Optional session persistence (TRD §8.3). Reads once on mount and dispatches
- * a hydrate; thereafter mirrors `fields` to localStorage on every change.
- * All access is wrapped in try/catch so private-mode failures are silent.
+ * Optional session persistence (TRD §8.3). Reads the saved schema once on
+ * mount and hydrates; thereafter mirrors the working schema to localStorage
+ * on every change. All access is wrapped in try/catch so private-mode
+ * failures are silent.
  */
-export function useFieldPersistence(
-  fields: FormField[],
-  onHydrate: (fields: FormField[]) => void,
+export function useSchemaPersistence(
+  schema: FormSchema,
+  onHydrate: (schema: FormSchema) => void,
 ): void {
   // Skip the first persist run so the empty initial state never clobbers
   // previously saved data before hydration lands.
@@ -41,7 +45,7 @@ export function useFieldPersistence(
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed: unknown = JSON.parse(raw);
-        if (isFormFieldArray(parsed) && parsed.length > 0) {
+        if (isFormSchema(parsed) && parsed.fields.length > 0) {
           onHydrate(parsed);
         }
       }
@@ -59,9 +63,9 @@ export function useFieldPersistence(
       return;
     }
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(fields));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(schema));
     } catch {
       // Ignore write failures; the app continues without persistence.
     }
-  }, [fields]);
+  }, [schema]);
 }

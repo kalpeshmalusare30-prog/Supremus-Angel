@@ -6,8 +6,9 @@ import { SideNav } from './SideNav';
 import { Content, Main, Shell } from './AppShell.styles';
 
 export interface AppShellProps {
-  onPublish: () => void;
-  canPublish: boolean;
+  /** Builder-only publish action. Omit on pages without a form to publish. */
+  onPublish?: () => void;
+  canPublish?: boolean;
   children: React.ReactNode;
 }
 

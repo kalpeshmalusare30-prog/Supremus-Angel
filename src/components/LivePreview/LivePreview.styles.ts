@@ -1,12 +1,13 @@
 'use client';
 
 import styled, { keyframes } from 'styled-components';
-import { media } from '@/styles/breakpoints';
 
 export const Section = styled.section`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.lg};
+  gap: ${({ theme }) => theme.spacing.md};
+  position: sticky;
+  top: ${({ theme }) => theme.spacing.lg};
 `;
 
 export const HeaderRow = styled.div`
@@ -38,71 +39,27 @@ export const Title = styled.h2`
   color: ${({ theme }) => theme.colors.textSubtle};
 `;
 
-export const SubmittedNote = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.md}`};
-  font-size: ${({ theme }) => theme.fontSizes.bodySm};
-  color: ${({ theme }) => theme.colors.success};
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
-
-  svg {
-    flex: none;
-  }
-`;
-
-export const Grid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: ${({ theme }) => theme.spacing.md};
-
-  ${media.upTablet} {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-`;
-
-export const EmptyState = styled.div`
+/** A "paper" frame that makes the preview read as the real, rendered form. */
+export const FormFrame = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  min-height: 240px;
-  padding: ${({ theme }) => theme.spacing.xl};
-  text-align: center;
-  color: ${({ theme }) => theme.colors.textSubtle};
-  background: ${({ theme }) => theme.colors.surfaceContainer};
-  border: 1px dashed ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.lg};
-
-  p {
-    font-size: ${({ theme }) => theme.fontSizes.bodySm};
-    max-width: 28ch;
-  }
-
-  svg {
-    color: ${({ theme }) => theme.colors.primary};
-    opacity: 0.6;
-  }
-`;
-
-export const ChartCard = styled.div`
-  padding: ${({ theme }) => theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.lg};
+  padding: ${({ theme }) => theme.spacing.lg};
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radii.lg};
   box-shadow: ${({ theme }) => theme.shadows.md};
 `;
 
-export const ChartTitle = styled.h3`
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-  font-family: ${({ theme }) => theme.fonts.mono};
-  font-size: ${({ theme }) => theme.fontSizes.caption};
-  font-weight: ${({ theme }) => theme.fontWeights.medium};
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: ${({ theme }) => theme.colors.textSubtle};
+export const FormTitle = styled.h3<{ $placeholder?: boolean }>`
+  font-family: ${({ theme }) => theme.fonts.heading};
+  font-size: ${({ theme }) => theme.fontSizes.h2};
+  font-weight: ${({ theme }) => theme.fontWeights.semibold};
+  letter-spacing: ${({ theme }) => theme.letterSpacings.tight};
+  color: ${({ theme, $placeholder }) =>
+    $placeholder ? theme.colors.textSubtle : theme.colors.text};
+  font-style: ${({ $placeholder }) => ($placeholder ? 'italic' : 'normal')};
+  /* Long, unbroken titles must wrap, not overflow the preview (BUG-008). */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 `;

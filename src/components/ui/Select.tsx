@@ -8,8 +8,17 @@ export interface SelectOption {
   label: string;
 }
 
-export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+/** A labelled set of options, rendered as an <optgroup>. */
+export interface SelectGroup {
+  label: string;
   options: SelectOption[];
+}
+
+export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  /** Flat options. Mutually exclusive with `groups`. */
+  options?: SelectOption[];
+  /** Grouped options, rendered as <optgroup>s. */
+  groups?: SelectGroup[];
 }
 
 const Wrapper = styled.div`
@@ -58,19 +67,29 @@ const StyledSelect = styled.select`
   }
 `;
 
-/** Native, themed select used for the field-type picker. */
+/** Native, themed select. Accepts flat `options` or grouped `groups`. */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { options, ...rest },
+  { options, groups, ...rest },
   ref,
 ) {
   return (
     <Wrapper>
       <StyledSelect ref={ref} {...rest}>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
+        {groups
+          ? groups.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          : options?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
       </StyledSelect>
     </Wrapper>
   );

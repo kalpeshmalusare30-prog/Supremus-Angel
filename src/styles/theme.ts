@@ -1,25 +1,27 @@
-// Design tokens — UI/UX Brief layout language skinned with the Stitch
-// indigo palette and the tri-font system (Geist / Inter / JetBrains Mono).
+// Design tokens — UI/UX Brief layout language skinned with the Supremus Angel
+// brand palette (magenta→violet, sampled from the logo) and the tri-font
+// system (Geist / Inter / JetBrains Mono).
 
 export const theme = {
   colors: {
-    // Brand — "Functional Purples": indigo→violet for input & creation.
-    primary: '#4648d4',
-    primaryHover: '#3a3cbf',
-    primaryActive: '#2f2ebe',
-    primarySoft: '#e1e0ff', // tinted backgrounds, badges, focus glow base
-    primaryContainer: '#6063ee',
+    // Brand — logo gradient magenta (#C93D96) → violet (#623D97).
+    // `primary` sits mid-gradient and holds ≥6.4:1 contrast on white.
+    primary: '#a12c8c',
+    primaryHover: '#8c2577',
+    primaryActive: '#771f64',
+    primarySoft: '#f7e8f2', // tinted backgrounds, badges, focus glow base
+    primaryContainer: '#b94fa3',
     onPrimary: '#ffffff',
-    secondary: '#4b41e1',
-    tertiary: '#8127cf',
+    secondary: '#c93d96', // magenta — left end of the logo gradient
+    tertiary: '#623d97', // violet — right end of the logo gradient
 
-    // Neutrals — structural scaffolding (Stitch tonal layers).
+    // Neutrals — structural scaffolding (tonal layers).
     background: '#f9fafb', // app floor (elevation level 0)
     surface: '#ffffff', // cards / form rows (level 1)
     surfaceMuted: '#f9fafb',
-    surfaceContainer: '#f1f3ff', // subtle tinted container
+    surfaceContainer: '#faf1f7', // subtle magenta-tinted container
     border: '#e5e7eb',
-    borderStrong: '#c7c4d7',
+    borderStrong: '#d4c2cf',
 
     text: '#111827',
     textMuted: '#4b5563',
@@ -35,7 +37,7 @@ export const theme = {
 
     // Surfaces for floating UI.
     tooltipBg: 'rgba(20, 27, 43, 0.92)',
-    tooltipText: '#edf0ff',
+    tooltipText: '#f7edf4',
     overlay: 'rgba(17, 24, 39, 0.4)',
   },
 
@@ -96,8 +98,8 @@ export const theme = {
   shadows: {
     sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
     md: '0 4px 20px rgba(0, 0, 0, 0.04)',
-    lg: '0 8px 24px rgba(70, 72, 212, 0.10)',
-    focus: '0 0 0 3px rgba(70, 72, 212, 0.15)',
+    lg: '0 8px 24px rgba(161, 44, 140, 0.10)',
+    focus: '0 0 0 3px rgba(161, 44, 140, 0.18)',
   },
 
   transitions: {
