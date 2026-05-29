@@ -3,6 +3,43 @@
 import styled from 'styled-components';
 import { media } from '@/styles/breakpoints';
 
+// IMP-002: Search input wrapper at the top of the field picker.
+export const SearchWrap = styled.div`
+  position: relative;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+
+  svg {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    color: ${({ theme }) => theme.colors.textSubtle};
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    font-family: ${({ theme }) => theme.fonts.body};
+    font-size: ${({ theme }) => theme.fontSizes.bodySm};
+    color: ${({ theme }) => theme.colors.text};
+    background: ${({ theme }) => theme.colors.surface};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radii.md};
+    outline: none;
+    transition: border-color ${({ theme }) => theme.transitions.fast};
+
+    &::placeholder {
+      color: ${({ theme }) => theme.colors.textSubtle};
+    }
+
+    &:focus {
+      border-color: ${({ theme }) => theme.colors.primary};
+      box-shadow: ${({ theme }) => theme.shadows.focus};
+    }
+  }
+`;
+
 export const Stack = styled.div`
   display: flex;
   flex-direction: column;

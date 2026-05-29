@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Plus, Send } from 'lucide-react';
+import { Menu, Plus, Send, X } from 'lucide-react';
 import styled from 'styled-components';
 import { media } from '@/styles/breakpoints';
 import { Button } from '@/components/ui';
@@ -43,8 +44,6 @@ const Left = styled.div`
   min-width: 0;
 `;
 
-// The full brand logo (symbol + wordmark + tagline) used as-is — no
-// separately typed name. Whitespace-trimmed copy lives at /logo-full.png.
 const Brand = styled(Link)`
   display: inline-flex;
   align-items: center;
@@ -54,7 +53,6 @@ const Brand = styled(Link)`
 
   & img {
     display: block;
-    /* fluid within the bar: a touch smaller on phones */
     height: 40px;
     width: auto;
   }
@@ -114,59 +112,167 @@ const Right = styled.div`
 
 const PublishLabel = styled.span`
   ${media.mobile} {
-    /* Icon-only on small screens to keep the bar from crowding. */
     display: none;
   }
 `;
 
-/** Top navigation: real Builder / My forms links plus a context action. */
+// IMP-001: Hamburger button — visible only on mobile/tablet, hidden on desktop.
+const HamBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.textMuted};
+  border-radius: ${({ theme }) => theme.radii.md};
+  transition: background ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceContainer};
+    color: ${({ theme }) => theme.colors.text};
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: ${({ theme }) => theme.shadows.focus};
+  }
+
+  ${media.upDesktop} {
+    display: none;
+  }
+`;
+
+// IMP-001: Mobile slide-down drawer.
+const Drawer = styled.nav`
+  position: fixed;
+  top: ${({ theme }) => theme.layout.navHeight};
+  left: 0;
+  right: 0;
+  z-index: 49;
+  background: ${({ theme }) => theme.colors.surface};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md}
+    ${({ theme }) => theme.spacing.md};
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  ${media.upDesktop} {
+    display: none;
+  }
+`;
+
+const DrawerLink = styled(Link)<{ $active?: boolean }>`
+  display: flex;
+  align-items: center;
+  padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.md}`};
+  font-family: ${({ theme }) => theme.fonts.body};
+  font-size: ${({ theme }) => theme.fontSizes.body};
+  font-weight: ${({ theme }) => theme.fontWeights.semibold};
+  color: ${({ theme, $active }) => ($active ? theme.colors.primary : theme.colors.textMuted)};
+  background: ${({ theme, $active }) => ($active ? theme.colors.primarySoft : 'transparent')};
+  border-radius: ${({ theme }) => theme.radii.md};
+  text-decoration: none;
+  transition: background ${({ theme }) => theme.transitions.fast},
+    color ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceContainer};
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+/** Top navigation: logo, nav links (desktop), publish action, and mobile hamburger (IMP-001). */
 export function TopNav({ onPublish, canPublish = false }: TopNavProps) {
   const pathname = usePathname() ?? '/';
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
 
+  // Close drawer whenever the route changes.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   return (
-    <Bar>
-      <Left>
-        <Brand href="/" aria-label="Supremus Angel — home">
-          <Image src="/logo-full.png" alt="Supremus Angel" width={66} height={50} priority />
-        </Brand>
-        <Nav aria-label="Primary">
+    <>
+      <Bar>
+        <Left>
+          <Brand href="/" aria-label="Supremus Angel — home">
+            <Image src="/logo-full.png" alt="Supremus Angel" width={66} height={50} priority />
+          </Brand>
+          <Nav aria-label="Primary">
+            {NAV_ITEMS.map(({ label, href }) => {
+              const active = isActive(href);
+              return (
+                <NavLink
+                  key={href}
+                  href={href}
+                  $active={active}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  {label}
+                </NavLink>
+              );
+            })}
+          </Nav>
+        </Left>
+
+        <Right>
+          {onPublish ? (
+            <Button
+              onClick={onPublish}
+              disabled={!canPublish}
+              aria-label="Publish form"
+              title="Publish the form and open it in a new tab"
+            >
+              <Send size={16} aria-hidden />
+              <PublishLabel>Publish form</PublishLabel>
+            </Button>
+          ) : (
+            <Button onClick={() => router.push('/')} aria-label="Create a new form">
+              <Plus size={16} aria-hidden />
+              <PublishLabel>New form</PublishLabel>
+            </Button>
+          )}
+
+          {/* IMP-001: Hamburger — hidden on desktop via CSS */}
+          <HamBtn
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav-drawer"
+          >
+            {mobileOpen ? <X size={22} aria-hidden /> : <Menu size={22} aria-hidden />}
+          </HamBtn>
+        </Right>
+      </Bar>
+
+      {/* IMP-001: Mobile navigation drawer */}
+      {mobileOpen && (
+        <Drawer id="mobile-nav-drawer" aria-label="Mobile navigation">
           {NAV_ITEMS.map(({ label, href }) => {
             const active = isActive(href);
             return (
-              <NavLink
+              <DrawerLink
                 key={href}
                 href={href}
                 $active={active}
                 aria-current={active ? 'page' : undefined}
+                onClick={() => setMobileOpen(false)}
               >
                 {label}
-              </NavLink>
+              </DrawerLink>
             );
           })}
-        </Nav>
-      </Left>
-
-      <Right>
-        {onPublish ? (
-          <Button
-            onClick={onPublish}
-            disabled={!canPublish}
-            aria-label="Publish form"
-            title="Publish the form and open it in a new tab"
-          >
-            <Send size={16} aria-hidden />
-            <PublishLabel>Publish form</PublishLabel>
-          </Button>
-        ) : (
-          <Button onClick={() => router.push('/')} aria-label="Create a new form">
-            <Plus size={16} aria-hidden />
-            <PublishLabel>New form</PublishLabel>
-          </Button>
-        )}
-      </Right>
-    </Bar>
+        </Drawer>
+      )}
+    </>
   );
 }

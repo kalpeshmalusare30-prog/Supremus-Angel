@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { Providers } from './providers';
@@ -27,10 +27,30 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
+// IMP-016: Prevent iOS Safari auto-zoom on input focus (font-size ≥ 16px also helps).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+const DESC = 'Build form fields on the fly and watch your data render live. Unlock the Power of Pre-IPO.';
+
+// IMP-018: Open Graph + Twitter card for rich link previews.
 export const metadata: Metadata = {
   title: 'Supremus Angel — Dynamic Form Builder',
-  description:
-    'Build form fields on the fly and watch your data render live. Unlock the Power of Pre-IPO.',
+  description: DESC,
+  openGraph: {
+    title: 'Supremus Angel — Dynamic Form Builder',
+    description: DESC,
+    type: 'website',
+    siteName: 'Supremus Angel',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Supremus Angel — Dynamic Form Builder',
+    description: DESC,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Check, Copy, Download, ExternalLink, Inbox } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, Check, Copy, Download, ExternalLink, Eye, Inbox } from 'lucide-react';
 import type { FormField } from '@/types/field';
 import { encodeSchema } from '@/lib/schema';
 import { downloadCsv } from '@/lib/csv';
@@ -9,7 +9,8 @@ import { summarizeField, type FieldSummary } from '@/lib/stats';
 import { useFormWithResponses } from '@/hooks/useStore';
 import { formatDisplayValue, linkHref } from '@/utils/format';
 import { parseList } from '@/utils/list';
-import { Button } from '@/components/ui';
+import { Button, Modal } from '@/components/ui';
+import { FormRenderer } from '@/components/FormRenderer';
 import type { SavedForm } from '@/lib/store';
 import {
   Back,
@@ -24,9 +25,16 @@ import {
   Head,
   HeadActions,
   Meta,
+  MobileCard,
+  MobileField,
+  MobileLabel,
+  MobileTime,
+  MobileValue,
   Muted,
   NumericRow,
   Sample,
+  SkeletonCard,
+  SkeletonLine,
   StatCard,
   StatHead,
   StatLabel,
@@ -115,7 +123,7 @@ function Summary({ summary }: { summary: FieldSummary }) {
           </Muted>
           {summary.samples.map((s, i) => (
             <Sample key={i} title={s}>
-              “{s}”
+              "{s}"
             </Sample>
           ))}
         </>
@@ -131,12 +139,38 @@ export function FormResponses({ id }: { id: string }) {
   const { form, responses, loaded } = useFormWithResponses(id);
   const [view, setView] = useState<'table' | 'summary'>('table');
   const [copied, setCopied] = useState(false);
+  const [exported, setExported] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const visible = useMemo(() => form?.fields.filter((f) => !f.hidden) ?? [], [form]);
   // Newest first.
   const rows = useMemo(() => [...responses].reverse(), [responses]);
 
-  if (!loaded) return null;
+  // IMP-005: Dynamic page title based on form name.
+  useEffect(() => {
+    if (!form) return;
+    document.title = `${form.title} — Responses — Supremus Angel`;
+    return () => {
+      document.title = 'Supremus Angel — Dynamic Form Builder';
+    };
+  }, [form]);
+
+  // IMP-004: Skeleton while loading from localStorage.
+  if (!loaded) {
+    return (
+      <>
+        <SkeletonCard>
+          <SkeletonLine $w="40%" $h="28px" />
+          <SkeletonLine $w="25%" />
+        </SkeletonCard>
+        <SkeletonCard style={{ marginTop: '16px' }}>
+          {[1, 2, 3].map((i) => (
+            <SkeletonLine key={i} $w={`${80 - i * 10}%`} />
+          ))}
+        </SkeletonCard>
+      </>
+    );
+  }
 
   if (!form) {
     return (
@@ -159,6 +193,13 @@ export function FormResponses({ id }: { id: string }) {
     } catch {
       // Clipboard blocked — Open still works.
     }
+  };
+
+  // IMP-024: Export with brief confirmation feedback.
+  const handleExport = () => {
+    downloadCsv(form, responses);
+    setExported(true);
+    window.setTimeout(() => setExported(false), 2000);
   };
 
   return (
@@ -186,6 +227,11 @@ export function FormResponses({ id }: { id: string }) {
             {copied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
             {copied ? 'Copied' : 'Copy link'}
           </Button>
+          {/* IMP-015: Preview form in a modal. */}
+          <Button size="sm" variant="secondary" onClick={() => setPreviewOpen(true)}>
+            <Eye size={16} aria-hidden />
+            Preview
+          </Button>
           <Button
             size="sm"
             variant="secondary"
@@ -194,37 +240,40 @@ export function FormResponses({ id }: { id: string }) {
             <ExternalLink size={16} aria-hidden />
             Open
           </Button>
-          <Button size="sm" onClick={() => downloadCsv(form, responses)} disabled={responses.length === 0}>
-            <Download size={16} aria-hidden />
-            Export CSV
+          {/* IMP-024: Download CSV with "Downloaded" confirmation. */}
+          <Button size="sm" onClick={handleExport} disabled={responses.length === 0}>
+            {exported ? <Check size={16} aria-hidden /> : <Download size={16} aria-hidden />}
+            {exported ? 'Downloaded' : 'Export CSV'}
           </Button>
         </HeadActions>
       </Head>
 
-      {responses.length === 0 ? (
-        <Empty>
-          <EmptyIcon aria-hidden>
-            <Inbox size={28} />
-          </EmptyIcon>
-          <EmptyHeading>No responses yet</EmptyHeading>
-          <Muted>Share the link and responses filled on this browser will appear here.</Muted>
-          <Button onClick={copyLink}>
-            {copied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
-            {copied ? 'Link copied' : 'Copy share link'}
-          </Button>
-        </Empty>
-      ) : (
-        <>
-          <Tabs role="tablist">
-            <Tab role="tab" aria-selected={view === 'table'} $active={view === 'table'} onClick={() => setView('table')}>
-              Responses
-            </Tab>
-            <Tab role="tab" aria-selected={view === 'summary'} $active={view === 'summary'} onClick={() => setView('summary')}>
-              Summary
-            </Tab>
-          </Tabs>
+      {/* IMP-021: Always show tabs; move 0-response empty state inside the table panel. */}
+      <Tabs role="tablist">
+        <Tab role="tab" aria-selected={view === 'table'} $active={view === 'table'} onClick={() => setView('table')}>
+          Responses
+        </Tab>
+        <Tab role="tab" aria-selected={view === 'summary'} $active={view === 'summary'} onClick={() => setView('summary')}>
+          Summary
+        </Tab>
+      </Tabs>
 
-          {view === 'table' ? (
+      {view === 'table' ? (
+        responses.length === 0 ? (
+          <Empty>
+            <EmptyIcon aria-hidden>
+              <Inbox size={28} />
+            </EmptyIcon>
+            <EmptyHeading>No responses yet</EmptyHeading>
+            <Muted>Share the link and responses filled on this browser will appear here.</Muted>
+            <Button onClick={copyLink}>
+              {copied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
+              {copied ? 'Link copied' : 'Copy share link'}
+            </Button>
+          </Empty>
+        ) : (
+          <>
+            {/* Desktop table */}
             <TableWrap>
               <Table>
                 <thead>
@@ -247,21 +296,65 @@ export function FormResponses({ id }: { id: string }) {
                 </tbody>
               </Table>
             </TableWrap>
-          ) : (
-            <SummaryGrid>
-              {visible.map((f) => (
-                <StatCard key={f.id}>
-                  <StatHead>
-                    <StatLabel title={f.label || f.name}>{f.label || f.name}</StatLabel>
-                    <TypeBadge>{f.type}</TypeBadge>
-                  </StatHead>
-                  <Summary summary={summarizeField(f, responses)} />
-                </StatCard>
-              ))}
-            </SummaryGrid>
-          )}
-        </>
+
+            {/* IMP-012: Mobile card layout — one card per response. */}
+            {rows.map((sub) => (
+              <MobileCard key={sub.id}>
+                <MobileTime>{new Date(sub.submittedAt).toLocaleString()}</MobileTime>
+                {visible.map((f) => (
+                  <MobileField key={f.id}>
+                    <MobileLabel>{f.label || f.name}</MobileLabel>
+                    <MobileValue>{cellNode(f, sub.answers[f.id] ?? '')}</MobileValue>
+                  </MobileField>
+                ))}
+              </MobileCard>
+            ))}
+          </>
+        )
+      ) : (
+        // Summary tab
+        responses.length === 0 ? (
+          <Empty>
+            <EmptyIcon aria-hidden>
+              <Inbox size={28} />
+            </EmptyIcon>
+            <EmptyHeading>No responses yet</EmptyHeading>
+            <Muted>Share your form link to start collecting data. Summary stats will appear here.</Muted>
+            <Button onClick={copyLink}>
+              {copied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
+              {copied ? 'Link copied' : 'Copy share link'}
+            </Button>
+          </Empty>
+        ) : (
+          <SummaryGrid>
+            {visible.map((f) => (
+              <StatCard key={f.id}>
+                <StatHead>
+                  <StatLabel title={f.label || f.name}>{f.label || f.name}</StatLabel>
+                  <TypeBadge>{f.type}</TypeBadge>
+                </StatHead>
+                <Summary summary={summarizeField(f, responses)} />
+              </StatCard>
+            ))}
+          </SummaryGrid>
+        )
       )}
+
+      {/* IMP-015: Form preview modal. */}
+      <Modal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title={`Preview: ${form.title}`}
+        size="lg"
+      >
+        <FormRenderer
+          fields={form.fields}
+          mode="preview"
+          values={{}}
+          errors={{}}
+          onChange={() => {}}
+        />
+      </Modal>
     </>
   );
 }

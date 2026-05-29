@@ -1,7 +1,9 @@
 'use client';
 
-import Link from 'next/link';
+import { keyframes } from 'styled-components';
 import styled from 'styled-components';
+import Link from 'next/link';
+import { media } from '@/styles/breakpoints';
 
 export const Back = styled(Link)`
   display: inline-flex;
@@ -84,14 +86,44 @@ export const Tab = styled.button<{ $active: boolean }>`
   transition: color ${({ theme }) => theme.transitions.fast};
 `;
 
+// --- loading skeleton (IMP-004) ---
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+`;
+
+export const SkeletonCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.lg};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.lg};
+`;
+
+export const SkeletonLine = styled.div<{ $w?: string; $h?: string }>`
+  height: ${({ $h }) => $h ?? '14px'};
+  width: ${({ $w }) => $w ?? '100%'};
+  background: ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.xs};
+  animation: ${pulse} 1.5s ease-in-out infinite;
+`;
+
 // --- responses table ---
 
+/** Desktop table — hidden on mobile, replaced by card layout (IMP-012). */
 export const TableWrap = styled.div`
   overflow-x: auto;
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radii.lg};
   box-shadow: ${({ theme }) => theme.shadows.md};
+
+  ${media.mobile} {
+    display: none;
+  }
 `;
 
 export const Table = styled.table`
@@ -275,4 +307,54 @@ export const EmptyHeading = styled.h2`
   font-size: ${({ theme }) => theme.fontSizes.h2};
   font-weight: ${({ theme }) => theme.fontWeights.semibold};
   color: ${({ theme }) => theme.colors.text};
+`;
+
+// --- IMP-012: Mobile response cards (hidden on desktop, shown on mobile) ---
+
+export const MobileCard = styled.div`
+  display: none;
+
+  ${media.mobile} {
+    display: flex;
+    flex-direction: column;
+    gap: ${({ theme }) => theme.spacing.sm};
+    padding: ${({ theme }) => theme.spacing.md};
+    background: ${({ theme }) => theme.colors.surface};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radii.lg};
+    margin-bottom: ${({ theme }) => theme.spacing.sm};
+    box-shadow: ${({ theme }) => theme.shadows.sm};
+  }
+`;
+
+export const MobileTime = styled.span`
+  font-family: ${({ theme }) => theme.fonts.mono};
+  font-size: ${({ theme }) => theme.fontSizes.caption};
+  color: ${({ theme }) => theme.colors.textSubtle};
+  padding-bottom: ${({ theme }) => theme.spacing.xs};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+export const MobileField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+export const MobileLabel = styled.span`
+  font-family: ${({ theme }) => theme.fonts.mono};
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textSubtle};
+`;
+
+export const MobileValue = styled.span`
+  font-size: ${({ theme }) => theme.fontSizes.bodySm};
+  color: ${({ theme }) => theme.colors.text};
+  word-break: break-word;
+
+  a {
+    color: ${({ theme }) => theme.colors.primary};
+  }
 `;

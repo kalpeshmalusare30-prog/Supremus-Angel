@@ -37,6 +37,7 @@ export const Toolbar = styled.div`
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   margin-bottom: ${({ theme }) => theme.spacing.lg};
+  flex-wrap: wrap;
 `;
 
 export const SearchWrap = styled.div`
@@ -44,7 +45,7 @@ export const SearchWrap = styled.div`
   flex: 1 1 auto;
   max-width: 420px;
 
-  svg {
+  svg:first-child {
     position: absolute;
     top: 50%;
     left: 12px;
@@ -55,6 +56,56 @@ export const SearchWrap = styled.div`
 
   input {
     padding-left: 38px;
+    padding-right: 32px;
+  }
+`;
+
+/** IMP-010: Clear (×) button inside search field. */
+export const ClearBtn = styled.button`
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.textSubtle};
+  border-radius: ${({ theme }) => theme.radii.xs};
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.text};
+  }
+`;
+
+/** IMP-010: "X of Y forms" result counter. */
+export const ResultCount = styled.span`
+  font-family: ${({ theme }) => theme.fonts.mono};
+  font-size: ${({ theme }) => theme.fontSizes.caption};
+  color: ${({ theme }) => theme.colors.textSubtle};
+  white-space: nowrap;
+`;
+
+/** IMP-011: Sort dropdown. */
+export const SortSelect = styled.select`
+  padding: 7px 10px;
+  font-family: ${({ theme }) => theme.fonts.body};
+  font-size: ${({ theme }) => theme.fontSizes.bodySm};
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  cursor: pointer;
+  outline: none;
+
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: ${({ theme }) => theme.shadows.focus};
   }
 `;
 
@@ -128,15 +179,27 @@ export const Dot = styled.span`
   color: ${({ theme }) => theme.colors.textSubtle};
 `;
 
-/** Short form-id badge so identically-titled forms stay distinguishable. */
+/** Short form-id badge — clickable to copy the full ID (IMP-022). */
 export const Code = styled.span`
   padding: 1px 6px;
   color: ${({ theme }) => theme.colors.textSubtle};
   background: ${({ theme }) => theme.colors.surfaceContainer};
   border-radius: ${({ theme }) => theme.radii.sm};
   letter-spacing: 0.02em;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  transition: background ${({ theme }) => theme.transitions.fast},
+    color ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primarySoft};
+    color: ${({ theme }) => theme.colors.primary};
+  }
 `;
 
+/** Response count badge — clickable to navigate to responses page (IMP-019). */
 export const Count = styled.span`
   display: inline-flex;
   align-items: center;
@@ -146,6 +209,16 @@ export const Count = styled.span`
   background: ${({ theme }) => theme.colors.primarySoft};
   border-radius: ${({ theme }) => theme.radii.full};
   font-weight: ${({ theme }) => theme.fontWeights.medium};
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  transition: background ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primaryContainer};
+    color: ${({ theme }) => theme.colors.onPrimary};
+  }
 `;
 
 export const Actions = styled.div`

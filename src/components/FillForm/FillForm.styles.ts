@@ -1,5 +1,6 @@
 'use client';
 
+import { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 
@@ -114,8 +115,8 @@ export const SummaryList = styled.dl`
 
 export const SummaryRow = styled.div`
   display: flex;
-  justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing.md};
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.xs};
   padding-bottom: ${({ theme }) => theme.spacing.sm};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 
@@ -137,7 +138,6 @@ export const SummaryVal = styled.dd`
   font-size: ${({ theme }) => theme.fontSizes.bodySm};
   font-weight: ${({ theme }) => theme.fontWeights.medium};
   color: ${({ theme }) => theme.colors.text};
-  text-align: right;
   word-break: break-word;
 
   a {
@@ -151,6 +151,46 @@ export const SummaryImage = styled.img`
   width: auto;
   border-radius: ${({ theme }) => theme.radii.sm};
   border: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+export const Attribution = styled.p`
+  font-size: ${({ theme }) => theme.fontSizes.caption};
+  color: ${({ theme }) => theme.colors.textSubtle};
+  text-align: center;
+  margin-top: ${({ theme }) => theme.spacing.xs};
+
+  a {
+    color: ${({ theme }) => theme.colors.primary};
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+`;
+
+// --- Loading skeleton ------------------------------------------------------
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+`;
+
+export const SkeletonCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.md};
+  width: min(640px, 100%);
+  padding: ${({ theme }) => theme.spacing.xl};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  box-shadow: ${({ theme }) => theme.shadows.md};
+`;
+
+export const SkeletonLine = styled.div<{ $w?: string; $h?: string }>`
+  height: ${({ $h }) => $h ?? '14px'};
+  width: ${({ $w }) => $w ?? '100%'};
+  background: ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.xs};
+  animation: ${pulse} 1.5s ease-in-out infinite;
 `;
 
 // --- Invalid state ---------------------------------------------------------

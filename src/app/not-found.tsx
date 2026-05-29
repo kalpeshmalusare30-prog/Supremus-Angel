@@ -1,15 +1,66 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { Compass } from 'lucide-react';
 import styled from 'styled-components';
+import { media } from '@/styles/breakpoints';
+
+// IMP-017: Consistent header so users can navigate without relying on the action buttons.
+const Header = styled.header`
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: ${({ theme }) => theme.layout.navHeight};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 ${({ theme }) => theme.spacing.lg};
+  background: ${({ theme }) => theme.colors.surface};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  z-index: ${({ theme }) => theme.zIndices.topNav};
+`;
+
+const BrandLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+
+  img {
+    height: 40px;
+    width: auto;
+
+    ${media.upDesktop} {
+      height: 50px;
+    }
+  }
+`;
+
+const Nav = styled.nav`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.lg};
+`;
+
+const NavLink = styled(Link)`
+  font-family: ${({ theme }) => theme.fonts.body};
+  font-size: ${({ theme }) => theme.fontSizes.bodySm};
+  font-weight: ${({ theme }) => theme.fontWeights.semibold};
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-decoration: none;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`;
 
 const Wrap = styled.main`
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: ${({ theme }) => theme.spacing.lg};
+  padding: ${({ theme }) => `calc(${theme.layout.navHeight} + ${theme.spacing.lg})`}
+    ${({ theme }) => theme.spacing.lg}
+    ${({ theme }) => theme.spacing.lg};
   background: ${({ theme }) => theme.colors.background};
 `;
 
@@ -92,27 +143,39 @@ const ButtonLink = styled(Link)<{ $primary?: boolean }>`
   }
 `;
 
-/** Branded 404 — replaces Next.js's raw default (QA BUG-010). */
+/** Branded 404 with consistent site header (IMP-017). */
 export default function NotFound() {
   return (
-    <Wrap>
-      <Card>
-        <Icon aria-hidden>
-          <Compass size={28} />
-        </Icon>
-        <Code>Error 404</Code>
-        <Title>This page wandered off</Title>
-        <Text>
-          The page you’re looking for doesn’t exist or may have moved. Let’s get you back to
-          building.
-        </Text>
-        <Links>
-          <ButtonLink href="/" $primary>
-            Go to the builder
-          </ButtonLink>
-          <ButtonLink href="/forms">My forms</ButtonLink>
-        </Links>
-      </Card>
-    </Wrap>
+    <>
+      <Header>
+        <BrandLink href="/" aria-label="Supremus Angel — home">
+          <Image src="/logo-full.png" alt="Supremus Angel" width={66} height={50} priority />
+        </BrandLink>
+        <Nav aria-label="Primary">
+          <NavLink href="/">Builder</NavLink>
+          <NavLink href="/forms">My forms</NavLink>
+        </Nav>
+      </Header>
+
+      <Wrap>
+        <Card>
+          <Icon aria-hidden>
+            <Compass size={28} />
+          </Icon>
+          <Code>Error 404</Code>
+          <Title>This page wandered off</Title>
+          <Text>
+            The page you're looking for doesn't exist or may have moved. Let's get you back to
+            building.
+          </Text>
+          <Links>
+            <ButtonLink href="/" $primary>
+              Go to the builder
+            </ButtonLink>
+            <ButtonLink href="/forms">My forms</ButtonLink>
+          </Links>
+        </Card>
+      </Wrap>
+    </>
   );
 }

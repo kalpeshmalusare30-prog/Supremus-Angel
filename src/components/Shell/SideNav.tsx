@@ -6,6 +6,7 @@ import { ClipboardList, Wrench } from 'lucide-react';
 import styled from 'styled-components';
 import { media } from '@/styles/breakpoints';
 
+// IMP-009: Rail is slightly wider so labels fit below icons.
 const Rail = styled.aside`
   display: none;
 
@@ -28,13 +29,16 @@ const Rail = styled.aside`
 
 const RailLink = styled(Link)<{ $active?: boolean }>`
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  gap: 3px;
+  width: 52px;
+  padding: 8px 4px 6px;
   color: ${({ theme, $active }) => ($active ? theme.colors.onPrimary : theme.colors.textMuted)};
   background: ${({ theme, $active }) => ($active ? theme.colors.primary : 'transparent')};
   border-radius: ${({ theme }) => theme.radii.md};
+  text-decoration: none;
   transition:
     background ${({ theme }) => theme.transitions.fast},
     color ${({ theme }) => theme.transitions.fast};
@@ -53,12 +57,21 @@ const RailLink = styled(Link)<{ $active?: boolean }>`
   }
 `;
 
+const NavLabel = styled.span`
+  font-family: ${({ theme }) => theme.fonts.mono};
+  font-size: 9px;
+  font-weight: ${({ theme }) => theme.fontWeights.medium};
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1;
+`;
+
 const NAV = [
   { key: 'builder', label: 'Builder', href: '/', Icon: Wrench },
-  { key: 'forms', label: 'My forms', href: '/forms', Icon: ClipboardList },
+  { key: 'forms', label: 'Forms', href: '/forms', Icon: ClipboardList },
 ];
 
-/** Left icon rail (desktop) — the two real destinations. */
+/** Left icon rail (desktop) — icons with text labels for clarity (IMP-009). */
 export function SideNav() {
   const pathname = usePathname() ?? '/';
   const isActive = (href: string) =>
@@ -77,7 +90,8 @@ export function SideNav() {
             title={label}
             aria-current={active ? 'page' : undefined}
           >
-            <Icon size={20} aria-hidden />
+            <Icon size={18} aria-hidden />
+            <NavLabel>{label}</NavLabel>
           </RailLink>
         );
       })}

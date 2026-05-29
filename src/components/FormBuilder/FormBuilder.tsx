@@ -74,6 +74,8 @@ export function FormBuilder() {
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<FormField | null>(null);
+  // IMP-003: Reset confirmation state.
+  const [resetConfirm, setResetConfirm] = useState(false);
 
   const hasFields = fields.length > 0;
 
@@ -144,10 +146,13 @@ export function FormBuilder() {
     }
   }, [publishedUrl]);
 
-  const handleReset = useCallback(() => {
+  // IMP-003: Reset goes through a confirmation modal before executing.
+  const handleResetRequest = useCallback(() => setResetConfirm(true), []);
+  const confirmReset = useCallback(() => {
     reset();
     setFormId(null);
     setPublishedUrl(null);
+    setResetConfirm(false);
   }, [reset]);
 
   // Other fields' names, so the editor can enforce uniqueness (excludes self on edit).
@@ -211,7 +216,7 @@ export function FormBuilder() {
                   <Send size={16} aria-hidden />
                   Publish form
                 </Button>
-                <Button variant="ghost" onClick={handleReset}>
+                <Button variant="ghost" onClick={handleResetRequest}>
                   <RotateCcw size={16} aria-hidden />
                   Reset
                 </Button>
@@ -310,6 +315,28 @@ export function FormBuilder() {
         <ConfirmText>
           <strong>{removeTarget?.label?.trim() || 'This field'}</strong> will be removed from the
           form. This action cannot be undone.
+        </ConfirmText>
+      </Modal>
+
+      {/* IMP-003: Reset confirmation dialog. */}
+      <Modal
+        open={resetConfirm}
+        onClose={() => setResetConfirm(false)}
+        title="Reset the form?"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setResetConfirm(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={confirmReset}>
+              <RotateCcw size={16} aria-hidden />
+              Reset form
+            </Button>
+          </>
+        }
+      >
+        <ConfirmText>
+          This will clear all fields and the form title. This action cannot be undone.
         </ConfirmText>
       </Modal>
     </AppShell>

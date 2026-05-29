@@ -13,6 +13,7 @@ import { resolveTitle } from '@/utils/title';
 import { FormRenderer } from '@/components/FormRenderer';
 import { Button } from '@/components/ui';
 import {
+  Attribution,
   Brand,
   BrandMark,
   BrandName,
@@ -22,6 +23,8 @@ import {
   Intro,
   Page,
   RequiredHint,
+  SkeletonCard,
+  SkeletonLine,
   SubmitError,
   SubmitRow,
   SuccessHead,
@@ -93,6 +96,16 @@ export function FillForm() {
     setLoaded(true);
   }, []);
 
+  // IMP-005: Dynamic page title based on form name.
+  useEffect(() => {
+    if (!schema) return;
+    const title = resolveTitle(schema.title).text;
+    document.title = `${title} — Supremus Angel`;
+    return () => {
+      document.title = 'Supremus Angel — Dynamic Form Builder';
+    };
+  }, [schema]);
+
   const handleChange = useCallback((id: string, value: string) => {
     setValues((v) => ({ ...v, [id]: value }));
     setErrors((e) => {
@@ -138,8 +151,19 @@ export function FillForm() {
     setErrors({});
   }, [schema]);
 
+  // IMP-004: Loading skeleton while the URL hash is being parsed.
   if (!loaded) {
-    return <Page />;
+    return (
+      <Page>
+        <SkeletonCard>
+          <SkeletonLine $w="55%" $h="28px" />
+          <SkeletonLine $w="100%" />
+          <SkeletonLine $w="100%" />
+          <SkeletonLine $w="70%" />
+          <SkeletonLine $w="38%" $h="40px" />
+        </SkeletonCard>
+      </Page>
+    );
   }
 
   const cardMotion = {
@@ -150,6 +174,9 @@ export function FillForm() {
 
   const errorCount = Object.keys(errors).length;
   const titleText = schema ? resolveTitle(schema.title) : { text: '', isFallback: false };
+
+  // IMP-006: Only show required-field hint when at least one field is required.
+  const hasRequired = schema ? answerable(schema.fields).some((f) => f.required) : false;
 
   return (
     <Page>
@@ -175,7 +202,7 @@ export function FillForm() {
             <CheckCircle2 size={24} aria-hidden />
             Response recorded
           </SuccessHead>
-          <Intro>Thanks for filling out “{titleText.text}”.</Intro>
+          <Intro>Thanks for filling out "{titleText.text}".</Intro>
           <SummaryList>
             {answerable(schema.fields).map((f) => (
               <SummaryRow key={f.id}>
@@ -185,10 +212,15 @@ export function FillForm() {
             ))}
           </SummaryList>
           <SubmitRow>
-            <Button variant="secondary" onClick={handleReset}>
+            {/* IMP-008: Primary style for the submit-again button. */}
+            <Button onClick={handleReset}>
               Submit another response
             </Button>
           </SubmitRow>
+          {/* IMP-008: Attribution link. */}
+          <Attribution>
+            <a href="/">Powered by Supremus Angel</a>
+          </Attribution>
         </Card>
       ) : (
         <Card {...cardMotion}>
@@ -212,7 +244,8 @@ export function FillForm() {
               <Send size={16} aria-hidden />
               Submit
             </Button>
-            <RequiredHint>* indicates a required field</RequiredHint>
+            {/* IMP-006: Conditionally shown based on whether any fields are required. */}
+            {hasRequired && <RequiredHint>* indicates a required field</RequiredHint>}
           </SubmitRow>
         </Card>
       )}
