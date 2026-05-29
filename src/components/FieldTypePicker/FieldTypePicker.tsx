@@ -86,7 +86,7 @@ export function FieldTypePicker({ open, onClose, onSelect }: FieldTypePickerProp
       {visibleGroups.length === 0 ? (
         <Stack>
           <Group>
-            <GroupLabel>No results for "{query}"</GroupLabel>
+            <GroupLabel>No results for &ldquo;{query}&rdquo;</GroupLabel>
           </Group>
         </Stack>
       ) : (

@@ -123,7 +123,7 @@ function Summary({ summary }: { summary: FieldSummary }) {
           </Muted>
           {summary.samples.map((s, i) => (
             <Sample key={i} title={s}>
-              "{s}"
+              &ldquo;{s}&rdquo;
             </Sample>
           ))}
         </>

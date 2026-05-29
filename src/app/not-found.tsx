@@ -165,7 +165,7 @@ export default function NotFound() {
           <Code>Error 404</Code>
           <Title>This page wandered off</Title>
           <Text>
-            The page you're looking for doesn't exist or may have moved. Let's get you back to
+            The page you&apos;re looking for doesn&apos;t exist or may have moved. Let&apos;s get you back to
             building.
           </Text>
           <Links>

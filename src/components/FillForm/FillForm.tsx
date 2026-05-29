@@ -202,7 +202,7 @@ export function FillForm() {
             <CheckCircle2 size={24} aria-hidden />
             Response recorded
           </SuccessHead>
-          <Intro>Thanks for filling out "{titleText.text}".</Intro>
+          <Intro>Thanks for filling out &ldquo;{titleText.text}&rdquo;.</Intro>
           <SummaryList>
             {answerable(schema.fields).map((f) => (
               <SummaryRow key={f.id}>

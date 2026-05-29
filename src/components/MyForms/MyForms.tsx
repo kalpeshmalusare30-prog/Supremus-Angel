@@ -104,7 +104,7 @@ export function MyForms() {
   // IMP-010 + IMP-011: Filter by query, sort by chosen key.
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let result = q ? forms.filter((f) => f.title.toLowerCase().includes(q)) : [...forms];
+    const result = q ? forms.filter((f) => f.title.toLowerCase().includes(q)) : [...forms];
     switch (sortBy) {
       case 'newest':
         result.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -163,7 +163,7 @@ export function MyForms() {
       <Head>
         <TitleBlock>
           <PageTitle>My forms</PageTitle>
-          <Subtitle>Every form you've published, with responses collected on this device.</Subtitle>
+          <Subtitle>Every form you&apos;ve published, with responses collected on this device.</Subtitle>
         </TitleBlock>
         <Button onClick={() => router.push('/')} title="New form (N)">
           <Plus size={20} aria-hidden />
@@ -226,7 +226,7 @@ export function MyForms() {
             <ClipboardList size={28} />
           </EmptyIcon>
           <EmptyHeading>No forms yet</EmptyHeading>
-          <Subtitle>Build a form and hit "Publish" — it'll show up here with its responses.</Subtitle>
+          <Subtitle>Build a form and hit &ldquo;Publish&rdquo; — it&apos;ll show up here with its responses.</Subtitle>
           <Button onClick={() => router.push('/')}>
             <Plus size={20} aria-hidden />
             Create your first form
@@ -234,7 +234,7 @@ export function MyForms() {
         </Empty>
       ) : visible.length === 0 ? (
         <Empty>
-          <EmptyHeading>No forms match "{query}".</EmptyHeading>
+          <EmptyHeading>No forms match &ldquo;{query}&rdquo;.</EmptyHeading>
         </Empty>
       ) : (
         <Grid>
@@ -359,7 +359,7 @@ export function MyForms() {
         }
       >
         <ConfirmText>
-          "{deleteTarget?.title}" and its{' '}
+          &ldquo;{deleteTarget?.title}&rdquo; and its{' '}
           {deleteTarget ? responseCount(deleteTarget.id) : 0} response(s) will be permanently
           removed from this browser. This action cannot be undone.
         </ConfirmText>
